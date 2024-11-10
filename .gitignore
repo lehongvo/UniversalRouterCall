@@ -1,0 +1,49 @@
+node_modules
+.env
+
+# Hardhat files
+/cache
+/artifacts
+
+# TypeChain files
+/typechain
+/typechain-types
+
+# solidity-coverage files
+/coverage
+/coverage.json
+
+# Hardhat Ignition default folder for deployments against a local node
+ignition/deployments/chain-31337
+
+# Environment and virtual environments
+.env
+.venv/
+
+# Test coverage
+coverage
+coverage.json
+
+# TypeScript typings
+typechain
+typechain-types
+
+# Cache
+__pycache__/
+.cache/
+
+# Build artifacts
+artifacts
+cache
+
+# Dependency lock file
+yarn.lock
+
+# Node modules
+node_modules/
+
+# macOS system files
+.DS_Store
+
+# Log files
+*.log

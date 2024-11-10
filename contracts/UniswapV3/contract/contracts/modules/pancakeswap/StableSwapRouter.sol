@@ -28,8 +28,9 @@ abstract contract StableSwapRouter is RouterImmutables, Permit2Payments, Ownable
 
     constructor(
         address _stableSwapFactory,
-        address _stableSwapInfo
-    ) {
+        address _stableSwapInfo,
+        address initialOwner
+    ) Ownable(initialOwner) {
         stableSwapFactory = _stableSwapFactory;
         stableSwapInfo = _stableSwapInfo;
     }

@@ -2,55 +2,47 @@
 pragma solidity ^0.8.17;
 
 // Command implementations
-import {Dispatcher} from "./base/Dispatcher.sol";
-import {RewardsCollector} from "./base/RewardsCollector.sol";
-import {RouterParameters, RouterImmutables} from "./base/RouterImmutables.sol";
-import {Commands} from "./libraries/Commands.sol";
-import {Constants} from "./libraries/Constants.sol";
-import {IUniversalRouter} from "./interfaces/IUniversalRouter.sol";
-import {StableSwapRouter} from "./modules/pancakeswap/StableSwapRouter.sol";
-import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
+import {Dispatcher} from './base/Dispatcher.sol';
+import {RewardsCollector} from './base/RewardsCollector.sol';
+import {RouterParameters, RouterImmutables} from './base/RouterImmutables.sol';
+import {Commands} from './libraries/Commands.sol';
+import {Constants} from './libraries/Constants.sol';
+import {IUniversalRouter} from './interfaces/IUniversalRouter.sol';
+import {StableSwapRouter} from './modules/pancakeswap/StableSwapRouter.sol';
+import {Pausable} from '@openzeppelin/contracts/security/Pausable.sol';
 
-contract UniversalRouter is
-    RouterImmutables,
-    IUniversalRouter,
-    Dispatcher,
-    RewardsCollector,
-    Pausable
-{
+contract UniversalRouter is RouterImmutables, IUniversalRouter, Dispatcher, RewardsCollector, Pausable {
     modifier checkDeadline(uint256 deadline) {
         if (block.timestamp > deadline) revert TransactionDeadlinePassed();
         _;
     }
 
-    constructor(
-        RouterParameters memory params
-    )
-        RouterImmutables(params)
-        StableSwapRouter(params.stableFactory, params.stableInfo)
-    {}
+    constructor(RouterParameters memory params) RouterImmutables(params) StableSwapRouter(params.stableFactory, params.stableInfo, msg.sender) {}
 
     /// @inheritdoc IUniversalRouter
-    function execute(
-        bytes calldata commands,
-        bytes[] calldata inputs,
-        uint256 deadline
-    ) external payable checkDeadline(deadline) {
+    function execute(bytes calldata commands, bytes[] calldata inputs, uint256 deadline)
+        external
+        payable
+        checkDeadline(deadline)
+    {
         execute(commands, inputs);
     }
 
     /// @inheritdoc Dispatcher
-    function execute(
-        bytes calldata commands,
-        bytes[] calldata inputs
-    ) public payable override isNotLocked whenNotPaused {
+    function execute(bytes calldata commands, bytes[] calldata inputs) 
+        public 
+        payable 
+        override 
+        isNotLocked 
+        whenNotPaused 
+    {
         bool success;
         bytes memory output;
         uint256 numCommands = commands.length;
         if (inputs.length != numCommands) revert LengthMismatch();
 
         // loop through all given commands, execute them and pass along outputs as defined
-        for (uint256 commandIndex = 0; commandIndex < numCommands; ) {
+        for (uint256 commandIndex = 0; commandIndex < numCommands;) {
             bytes1 command = commands[commandIndex];
 
             bytes calldata input = inputs[commandIndex];
@@ -58,10 +50,7 @@ contract UniversalRouter is
             (success, output) = dispatch(command, input);
 
             if (!success && successRequired(command)) {
-                revert ExecutionFailed({
-                    commandIndex: commandIndex,
-                    message: output
-                });
+                revert ExecutionFailed({commandIndex: commandIndex, message: output});
             }
 
             unchecked {
@@ -70,8 +59,7 @@ contract UniversalRouter is
         }
 
         uint256 balance = address(this).balance;
-        if ((balance > 0) && (msg.sender != address(this)))
-            sweep(Constants.ETH, msg.sender, balance);
+        if ((balance > 0) && (msg.sender != address(this))) sweep(Constants.ETH, msg.sender, balance);
     }
 
     function successRequired(bytes1 command) internal pure returns (bool) {
